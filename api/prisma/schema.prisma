@@ -1,0 +1,132 @@
+// Path: api/prisma/schema.prisma
+// Allowance database schema (TiDB Cloud, MySQL-compatible)
+// Naming follows AP2 terms: Intent Mandate (user's rules) and Cart Mandate (what the agent assembled).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum MandateStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum DecisionResult {
+  APPROVED // passed every check, paid automatically
+  HELD     // above auto-approve limit, waiting for the user
+  BLOCKED  // failed a rule or the intent verifier
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+// The person who gives the agent an allowance.
+// The PayPal vault token is what lets the agent pay without a click.
+model User {
+  id                   String          @id @default(cuid())
+  name                 String          @db.VarChar(120)
+  email                String          @unique @db.VarChar(191)
+  paypalCustomerId     String?         @map("paypal_customer_id") @db.VarChar(64)
+  paypalPaymentTokenId String?         @map("paypal_payment_token_id") @db.VarChar(64)
+  createdAt            DateTime        @default(now()) @map("created_at")
+  mandates             IntentMandate[]
+
+  @@map("users")
+}
+
+// The rules the user gives the agent, written in plain English,
+// turned into policy_json by Gemini, then signed with HMAC.
+model IntentMandate {
+  id                  String        @id @default(cuid())
+  userId              String        @map("user_id")
+  user                User          @relation(fields: [userId], references: [id])
+  naturalText         String        @map("natural_text") @db.Text
+  policyJson          Json          @map("policy_json")
+  signature           String        @db.VarChar(128)
+  period              String        @db.VarChar(16) // "monthly" | "weekly"
+  budgetUsd           Decimal       @map("budget_usd") @db.Decimal(10, 2)
+  autoApproveLimitUsd Decimal       @map("auto_approve_limit_usd") @db.Decimal(10, 2)
+  status              MandateStatus @default(ACTIVE)
+  expiresAt           DateTime?     @map("expires_at")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  carts               CartMandate[]
+
+  @@index([userId, status])
+  @@map("intent_mandates")
+}
+
+// One shopping request from the agent: what the user asked for,
+// and the cart the agent built to satisfy it.
+model CartMandate {
+  id              String        @id @default(cuid())
+  intentMandateId String        @map("intent_mandate_id")
+  intentMandate   IntentMandate @relation(fields: [intentMandateId], references: [id])
+  userRequest     String        @map("user_request") @db.Text
+  itemsJson       Json          @map("items_json")
+  totalUsd        Decimal       @map("total_usd") @db.Decimal(10, 2)
+  merchant        String        @db.VarChar(191)
+  source          String        @default("channel3") @db.VarChar(32)
+  sourceUrl       String?       @map("source_url") @db.Text // product page the agent read
+  createdAt       DateTime      @default(now()) @map("created_at")
+  decision        Decision?
+
+  @@index([intentMandateId])
+  @@map("cart_mandates")
+}
+
+// Result of the policy engine + intent verifier for one cart.
+model Decision {
+  id            String         @id @default(cuid())
+  cartMandateId String         @unique @map("cart_mandate_id")
+  cartMandate   CartMandate    @relation(fields: [cartMandateId], references: [id])
+  result        DecisionResult
+  ruleHit       String?        @map("rule_hit") @db.VarChar(64) // e.g. "over_budget", "intent_mismatch"
+  intentScore   Float?         @map("intent_score")
+  aiReason      String?        @map("ai_reason") @db.Text
+  decidedBy     String         @default("system") @map("decided_by") @db.VarChar(16) // "system" | "user"
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  payment       Payment?
+
+  @@index([result])
+  @@map("decisions")
+}
+
+// Money actually moved through PayPal.
+model Payment {
+  id              String        @id @default(cuid())
+  decisionId      String        @unique @map("decision_id")
+  decision        Decision      @relation(fields: [decisionId], references: [id])
+  paypalOrderId   String?       @unique @map("paypal_order_id") @db.VarChar(64)
+  paypalCaptureId String?       @map("paypal_capture_id") @db.VarChar(64)
+  status          PaymentStatus @default(PENDING)
+  amountUsd       Decimal       @map("amount_usd") @db.Decimal(10, 2)
+  capturedAt      DateTime?     @map("captured_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("payments")
+}
+
+// Every event, shown in the AG Grid audit trail.
+model AuditLog {
+  id         String   @id @default(cuid())
+  entity     String   @db.VarChar(32) // "mandate" | "cart" | "decision" | "payment"
+  entityId   String   @map("entity_id") @db.VarChar(64)
+  event      String   @db.VarChar(64) // e.g. "mandate.created", "payment.completed"
+  detailJson Json?    @map("detail_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
