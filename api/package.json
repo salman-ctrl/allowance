@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "test": "node --test tests/policy.schema.test.js tests/hmac.test.js tests/policy.engine.test.js"
+  "dev": "node --watch-path=./src src/server.js",
+  "start": "node src/server.js",
+  "test": "node --test"
 },
   "keywords": [],
   "author": "",
