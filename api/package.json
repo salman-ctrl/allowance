@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "test": "node --test tests/policy.schema.test.js tests/hmac.test.js tests/policy.engine.test.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
