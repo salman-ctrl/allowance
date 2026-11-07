@@ -12,6 +12,9 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "engines": {
+  "node": ">=22"
+},
   "dependencies": {
     "@google/genai": "^2.32.0",
     "@prisma/client": "^6.19.3",

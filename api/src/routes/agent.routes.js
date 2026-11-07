@@ -5,11 +5,12 @@ import { generateJson } from '../lib/ai.js';
 import { cartDeps } from '../lib/context.js';
 import { submitCart } from '../services/cart.service.js';
 import { runShoppingAgent } from '../agent/shopping.agent.js';
+import { aiLimit } from '../middleware/limits.js';
 
 export const agentRouter = Router();
 
 // POST /agent/run  { request, simulate_attack? }  -> the demo agent shops, then asks Allowance to pay
-agentRouter.post('/run', async (req, res) => {
+agentRouter.post('/run', aiLimit, async (req, res) => {
   if (!channel3) return res.status(503).json({ ok: false, errors: ['CHANNEL3_API_KEY is not set on the server'] });
 
   const deps = await cartDeps();

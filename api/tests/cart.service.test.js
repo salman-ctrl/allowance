@@ -129,6 +129,7 @@ test('scenario 2: chair is held, nothing is charged until the user approves', as
   assert.equal(a.payment.status, 'COMPLETED');
   assert.equal(s.charges.length, 1);
   assert.equal(s.decisions[0].decidedBy, 'user');
+  assert.doesNotMatch(s.decisions[0].aiReason, /waiting/, 'an approved cart must not still say it is waiting');
 });
 
 test('scenario 2: approving twice charges only once', async () => {

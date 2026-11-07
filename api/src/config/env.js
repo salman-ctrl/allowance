@@ -6,6 +6,11 @@ import { z } from 'zod';
 
 const schema = z.object({
   PORT: z.coerce.number().default(4000),
+  // Comma-separated list of frontend origins allowed to call the API from a browser
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:5173')
+    .transform((s) => s.split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean)),
   DATABASE_URL: z.string().startsWith('mysql://'),
   MANDATE_SIGNING_SECRET: z.string().min(32),
   GEMINI_API_KEY: z.string().min(10),

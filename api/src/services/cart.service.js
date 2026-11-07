@@ -110,7 +110,7 @@ export async function approveHeldCart({ cartId }, { repo, db, secret, paypal, us
 
   const data = blockedBy
     ? { result: 'BLOCKED', ruleHit: blockedBy.ruleHit, aiReason: blockedBy.reason, decidedBy: 'user' }
-    : { result: 'APPROVED', ruleHit: 'approved_by_user', decidedBy: 'user' };
+    : { result: 'APPROVED', ruleHit: 'approved_by_user', aiReason: 'Above the auto-approve limit, approved by the user', decidedBy: 'user' };
 
   const moved = await repo.transitionHeld(row.decision.id, data);
   if (!moved) return fail(409, 'This cart was already handled');

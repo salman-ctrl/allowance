@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma.js';
 import { generateJson } from '../lib/ai.js';
 import { getDemoUser } from '../services/user.service.js';
 import { createMandate, draftPolicy, getActiveMandate } from '../services/mandate.service.js';
+import { aiLimit } from '../middleware/limits.js';
 
 export const mandatesRouter = Router();
 
@@ -12,7 +13,7 @@ const demoUser = () =>
   getDemoUser(prisma, { paymentTokenId: env.PAYMENT_TOKEN_ID, customerId: env.PAYPAL_CUSTOMER_ID });
 
 // POST /mandates/draft  { text }  -> AI-drafted policy for the user to review, nothing saved
-mandatesRouter.post('/draft', async (req, res) => {
+mandatesRouter.post('/draft', aiLimit, async (req, res) => {
   const result = await draftPolicy(req.body?.text, { llm: generateJson });
   res.status(result.ok ? 200 : result.unavailable ? 503 : 422).json(result);
 });
