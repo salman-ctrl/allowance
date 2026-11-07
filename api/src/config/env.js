@@ -9,10 +9,12 @@ const schema = z.object({
   DATABASE_URL: z.string().startsWith('mysql://'),
   MANDATE_SIGNING_SECRET: z.string().min(32),
   GEMINI_API_KEY: z.string().min(10),
-  GEMINI_MODEL: z.string().default('gemini-flash-latest'),
-  GEMINI_FALLBACK_MODEL: z.string().default('gemini-flash-lite-latest'),
+  // Lite is fast and enough for JSON drafting and cart checks; full Flash is the backup
+  GEMINI_MODEL: z.string().default('gemini-flash-lite-latest'),
+  GEMINI_FALLBACK_MODEL: z.string().default('gemini-flash-latest'),
   PAYPAL_CLIENT_ID: z.string().min(10),
   PAYPAL_CLIENT_SECRET: z.string().min(10),
+  CHANNEL3_API_KEY: z.string().optional(),
   PAYMENT_TOKEN_ID: z.string().optional(),
   PAYPAL_CUSTOMER_ID: z.string().optional(),
 });

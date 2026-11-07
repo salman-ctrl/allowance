@@ -1,6 +1,7 @@
 // Path: api/src/lib/gemini.js
 // Gemini wrapper that always asks for JSON back, and survives a busy Gemini:
-//   - 429/500/503/504, timeout or network drop: wait, retry, then fall back to the next model
+//   - 429/500/503/504 or network drop: wait, retry, then fall back to the next model
+//   - timeout: go straight to the next model (a slow model will be slow again)
 //   - 404 (model not found): go straight to the next model
 //   - anything else (bad key, bad request): fail immediately, it is a config bug
 // This file never reads .env, so tests can build it with fakes.
@@ -59,8 +60,11 @@ export function createGenerateJson({
           return await callGemini(model, args);
         } catch (err) {
           lastError = err;
-          if (err?.status === 404) break; // this model does not exist, try the next one
-          if (!RETRYABLE.has(err?.status) && !isTimeout(err) && !isNetwork(err)) throw err;
+          if (err?.status === 404 || isTimeout(err)) {
+            console.warn(`Gemini ${model} ${isTimeout(err) ? 'timed out' : 'not found'}, switching model`);
+            break;
+          }
+          if (!RETRYABLE.has(err?.status) && !isNetwork(err)) throw err;
           console.warn(`Gemini ${model} attempt ${attempt} failed (${err?.status ?? err?.name}), retrying`);
           if (attempt < attemptsPerModel) await sleep(retryDelayMs * attempt);
         }

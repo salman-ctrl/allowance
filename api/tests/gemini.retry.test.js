@@ -40,11 +40,18 @@ test('404 model not found skips straight to the backup', async () => {
   assert.deepEqual(used, ['main', 'backup']);
 });
 
-test('a timeout counts as retryable', async () => {
+test('a timeout switches straight to the backup model instead of waiting again', async () => {
   const timeout = Object.assign(new Error('timed out'), { name: 'TimeoutError' });
   const { call, used } = scripted(timeout);
   await build(call)({});
-  assert.deepEqual(used, ['main', 'main']);
+  assert.deepEqual(used, ['main', 'backup']);
+});
+
+test('an AbortError (what Gemini actually throws on timeout) also switches model', async () => {
+  const aborted = Object.assign(new Error('aborted'), { name: 'AbortError' });
+  const { call, used } = scripted(aborted);
+  await build(call)({});
+  assert.deepEqual(used, ['main', 'backup']);
 });
 
 test('a network drop (no HTTP status) counts as retryable', async () => {
