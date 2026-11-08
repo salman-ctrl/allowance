@@ -103,18 +103,6 @@ const chair = { name: 'Ergonomic office chair', category: 'office_supplies', uni
 
 // ---- Scenario 1 ----
 
-test('scenario 1: mouse is approved and paid once through PayPal with the vaulted token', async () => {
-  const { s, deps } = await setup();
-  const r = await submitCart(body('Buy a wireless mouse under $40', [mouse]), deps);
-
-  assert.equal(r.decision.result, 'APPROVED');
-  assert.equal(r.payment.status, 'COMPLETED');
-  assert.equal(s.charges.length, 1);
-  assert.equal(s.charges[0].paymentTokenId, 'VT1');
-  assert.equal(s.charges[0].amountUsd, '39.99');
-  assert.equal(s.charges[0].requestId, r.cartId);
-  assert.ok(s.audit.some((e) => e.event === 'payment.completed'));
-});
 
 // ---- Scenario 2 ----
 

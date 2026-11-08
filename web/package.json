@@ -1,0 +1,28 @@
+{
+  "name": "allowance-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@fontsource-variable/public-sans": "^5.3.0",
+    "ag-grid-community": "^36.3.0",
+    "ag-grid-react": "^36.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@vitejs/plugin-react": "^6.2.1",
+    "tailwindcss": "^4.3.5",
+    "vite": "^8.3.6"
+  }
+}
