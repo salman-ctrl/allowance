@@ -12,7 +12,7 @@ Built solo for the **PayPal AI Hackathon 2026**. The design follows the mandate 
 |---|---|
 | **Live demo** | https://allowance-web-auua.onrender.com |
 | **API** | https://allowance-api-5fje.onrender.com |
-| **Video** | _link added on submission_ |
+| **Video** | https://youtu.be/JyJ_PZZXVrw?si=ffTYqgLgYAuDVHFG |
 
 > The demo runs on the **PayPal sandbox**. No real money moves. The API is on Render's free tier, so the very first request after a quiet period can take up to ~50 seconds while it wakes up.
 
